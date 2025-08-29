@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+/* Global styles */
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-200 antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-sky-300;
+  }
+
+  button {
+    @apply focus:outline-none;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  /* overflow: hidden; prevents page scrolling */
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155; /* slate-700 */
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #0ea5e9; /* sky-500 */
+}

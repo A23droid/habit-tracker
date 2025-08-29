@@ -1,0 +1,4 @@
+All habits will have two things: the name and if it's done (that day).
+
+Calender icon and streak logic
+
