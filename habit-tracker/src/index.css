@@ -35,3 +35,31 @@ html, body, #root {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #0ea5e9; /* sky-500 */
 }
+
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 2s infinite ease-in-out;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.1) translateY(-5px); }
+  }
+  .animate-bounce {
+    animation: bounce 0.5s ease-out;
+  }
+/* Nuke the default ring for today */
+.react-calendar__tile--now:enabled,
+.react-calendar__tile--now:enabled:focus {
+  background: none !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.highlight {
+  background: #4f46e5 !important;
+  color: white !important;
+  border-radius: 50% !important;
+}
