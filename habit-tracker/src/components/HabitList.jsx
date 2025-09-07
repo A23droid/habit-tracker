@@ -1,9 +1,18 @@
 import React from "react";
+import { useOutletContext } from "react-router-dom";
 
-function HabitList({ habits }) {
+function HabitList({ habits, setHabits }) {
+  const { markHabitComplete } = useOutletContext();
+  const handleCheckbox = (habitId) => {
+    const today = new Date();
+    markHabitComplete(habitId, today);
+  }
   return (
     <div className="bg-slate-900 text-slate-100 rounded-2xl p-3 sm:p-5 shadow-xl h-full flex flex-col min-h-0">
       <h2 className="text-lg sm:text-xl font-semibold text-sky-300 mb-3 sm:mb-4 shrink-0">Your Habits</h2>
+      {habits.length === 0 ? (
+        <p className="text-slate-400">No habits yet. Go add some 🚀</p>) :
+        (
       <ul className="space-y-2 sm:space-y-3 overflow-y-auto pr-1 sm:pr-2 flex-1 min-h-0 custom-scrollbar">
         {habits.map((habit) => (
           <li
@@ -13,6 +22,7 @@ function HabitList({ habits }) {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <input
                 type="checkbox"
+                onChange={() => handleCheckbox(habit.id)}
                 className="w-4 h-4 sm:w-5 sm:h-5 accent-sky-500 rounded-md transition duration-200"
               />
               <span className="text-base sm:text-lg font-medium truncate">{habit.title}</span>
@@ -23,6 +33,7 @@ function HabitList({ habits }) {
           </li>
         ))}
       </ul>
+        )}
     </div>
   );
 }

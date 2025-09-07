@@ -1,25 +1,28 @@
 import React from 'react'
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-
-// TODO:
-// 1. Make the form labels go to right
-// 2. Improve the font and the weights
-// 3. Buttons be in mid
+import { Link, useNavigate } from 'react-router-dom';
+import  {toast} from 'react-toastify';
+import { useOutletContext } from "react-router-dom";
 
 export default function AddHabit() {
+
+  const { habits, setHabits } = useOutletContext();
   const [habitName, setHabitName] = useState("");
-  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]); // Default: 2025-08-31
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [frequency, setFrequency] = useState("Daily");
   const [isHabitAdded, setIsHabitAdded] = useState(false);
+  const [selectedDays, setSelectedDays] = useState([]);
+  const navigate = useNavigate();
+
 
   // Get days in a month
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const [selectedYear, selectedMonth] = startDate.split("-").map(Number);
-  // --- Helpers (put near top) ---
+
+  // --- Helpers ---
   const toLocalDate = (yyyyMmDd) => {
     const [y, m, d] = yyyyMmDd.split("-").map(Number);
-    return new Date(y, m - 1, d); // local midnight
+    return new Date(y, m - 1, d);
   };
   const sameYMD = (a, b) =>
     a.getFullYear() === b.getFullYear() &&
@@ -37,8 +40,8 @@ export default function AddHabit() {
   const daysInMonth = Array.from(
     { length: getDaysInMonth(selectedYear, selectedMonth - 1) },
     (_, i) => {
-      const date = new Date(selectedYear, selectedMonth - 1, i + 1); // local
-      const diff = daysBetween(date, start); // local-day diff
+      const date = new Date(selectedYear, selectedMonth - 1, i + 1);
+      const diff = daysBetween(date, start);
 
       const isStartDate = sameYMD(date, start);
       const isToday = sameYMD(date, today);
@@ -49,8 +52,8 @@ export default function AddHabit() {
         diff >= 0 &&
         (
           frequency === "Daily" ||
-          (frequency === "Weekly" && date.getDay() === start.getDay()) ||
-          (frequency === "Every 2 Days" && diff % 2 === 0)
+          (frequency === "Weekly" && selectedDays.includes(date.getDay())) ||
+          (frequency === "Custom" && selectedDays.includes(date.getDay()))
         );
 
       return {
@@ -67,15 +70,15 @@ export default function AddHabit() {
   // Class handler for dynamic heatmap
   const getDayClass = (day) => {
     if (day.isBeforeStart) {
-      return "bg-transparent border-gray-600"; // Past dates blank
+      return "bg-transparent border-gray-600";
     }
 
     if (day.isStartDate) {
-      return `bg-sky-500 bg-opacity-90 text-white font-bold border-sky-700 shadow-lg scale-105 ${isHabitAdded ? "animate-bounce" : ""}`; // Bold anchor with bounce
+      return `bg-sky-500 bg-opacity-90 text-white font-bold border-sky-700 shadow-lg scale-105 ${isHabitAdded ? "animate-bounce" : ""}`;
     }
 
     if (day.isToday && day.isHabitDay) {
-      return "bg-sky-200/30 border-sky-700 animate-pulse"; // Subtle fill and pulse for today (if not start date)
+      return "bg-sky-200/30 border-sky-700 animate-pulse";
     }
 
     if (day.isAfterStart && day.isHabitDay) {
@@ -83,7 +86,7 @@ export default function AddHabit() {
     }
 
     if (day.isAfterStart) {
-      return "bg-transparent border-sky-700 w-6 h-6 sm:w-8 sm:h-8"; // Subtle transparent circles
+      return "bg-transparent border-sky-700 w-6 h-6 sm:w-8 sm:h-8";
     }
 
     return "bg-transparent border-gray-600";
@@ -96,10 +99,55 @@ export default function AddHabit() {
   ];
   const monthName = monthNames[selectedMonth - 1];
 
-  // Handle habit addition animation
-  const handleAddHabit = () => {
-    setIsHabitAdded(true);
-    setTimeout(() => setIsHabitAdded(false), 1000); // Reset bounce after 1s
+  // Handle habit addition animation and navigation
+const handleAddHabit = () => {
+  if (!habitName.trim()) {
+    toast.error("Please enter a habit name!");
+    return;
+  }
+
+  const newHabit = {
+    id: Date.now(), // unique id
+    title: habitName,
+    highestStreak: 0,
+    currentStreak: 0,
+    
+    freq: {
+      mode: frequency,
+      days: selectedDays,
+      n: selectedDays.length,
+      startDate,
+    },
+    progress: [],
+    
+    lastCompleted: null,
+  };
+
+  // assuming you're passing setHabits as a prop
+  setHabits((prev) => [...prev, newHabit]);
+
+  toast.success("Habit saved successfully!", {
+    position: "top-right",
+    autoClose: 2000,
+  });
+
+  setIsHabitAdded(true);
+  setTimeout(() => {
+    setIsHabitAdded(false);
+    navigate("/");
+  }, 1000);
+};
+
+
+  // Handle day selection for Weekly and Custom frequency
+  const handleDayToggle = (day) => {
+    if (frequency === "Weekly") {
+      setSelectedDays([day]);
+    } else {
+      setSelectedDays((prev) =>
+        prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+      );
+    }
   };
 
   return (
@@ -133,14 +181,35 @@ export default function AddHabit() {
               <label className="block text-lg sm:text-xl font-semibold text-sky-200 mb-2 text-left tracking-wide">Frequency</label>
               <select
                 value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
+                onChange={(e) => {
+                  setFrequency(e.target.value);
+                  setSelectedDays([]);
+                }}
                 className="w-full p-3 rounded-xl bg-slate-700 text-white border-2 border-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 transition text-left shadow-md"
               >
                 <option value="Daily">Daily</option>
                 <option value="Weekly">Weekly</option>
-                <option value="Every 2 Days">Every 2 Days</option>
+                <option value="Custom">Custom</option>
               </select>
             </div>
+            {(frequency === "Weekly" || frequency === "Custom") && (
+              <div>
+                <label className="block text-lg sm:text-xl font-semibold text-sky-200 mb-2 text-left tracking-wide">
+                  {frequency === "Weekly" ? "Select Day" : "Select Days"}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleDayToggle(index)}
+                      className={`px-3 py-1 rounded-lg border-2 ${selectedDays.includes(index) ? "bg-sky-500 text-white border-sky-700" : "bg-slate-700 text-white border-sky-700"} transition`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right side heatmap */}
@@ -182,3 +251,4 @@ export default function AddHabit() {
     </div>
   );
 }
+
